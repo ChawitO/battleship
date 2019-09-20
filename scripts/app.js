@@ -163,6 +163,42 @@ window.addEventListener('DOMContentLoaded', () => {
   function allSunk() {
     return enemyShipInPlay.every(ship => !ship.afloat())
   }
+
+  // AI attack logic
+  // Math.random() for now
+  const enemyAttempts = []
+  const attackIntervalId = setInterval(() => {
+    if (phase === 'play') {
+      enemyAttack()
+    } else if (phase === 'finished') {
+      clearInterval(attackIntervalId)
+    }
+  }, 1000)
+
+  function enemyAttack() {
+    let index = Math.floor(Math.random() * boardWidth ** 2)
+    while (enemyAttempts.includes(index)) {
+      index = Math.floor(Math.random() * boardWidth ** 2)
+    }
+    enemyAttempts.push(index)
+    const cell = cells[index]
+    cell.textContent = '*'
+    enemyCheckHit(index)
+  }
+
+  function enemyCheckHit(index) {
+    const ship = shipInPlay.find(ship => ship.pos.includes(index))
+    if (ship) {
+      ship.damage++
+      if (!ship.afloat()) {
+        ship.pos.forEach(pos => cells[pos].textContent = 'X')
+      }
+      const finished = shipInPlay.every(ship => !ship.afloat())
+      if (finished) {
+        phase = 'finished'
+      }
+    }
+  }
 })
 
 HTMLElement.prototype.abc = function() {
