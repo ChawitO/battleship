@@ -14,16 +14,30 @@ div.board {
   }
 }
 
-div.placement {
-  > div:hover {
-    // background-color: yellow;
-  }
-}
-
 div.ghost {
   background-color: steelBlue;
 }
 
 div.ship {
   background-color: brown;
+}
+
+div.target-board {
+  display: grid;
+  width: 400px;
+  grid-template-columns: repeat(10, 40px);
+  grid-template-rows: repeat(10, 40px);
+  background-color: grey;
+
+  div {
+    border: 1px solid black;
+  }
+}
+
+div.hit {
+  background-color: #F93C00;
+}
+
+div.miss {
+  background-color: #FAFF00;
 }

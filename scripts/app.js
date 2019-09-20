@@ -1,9 +1,9 @@
 class Ship {
-  constructor(type, size) {
+  constructor(type, size, pos = []) {
     this.type = type
     this.size = size
     this.damage = 0
-    this.pos = []
+    this.pos = pos
   }
   afloat() {
     return this.damage < this.size
@@ -12,11 +12,13 @@ class Ship {
 
 window.addEventListener('DOMContentLoaded', () => {
   // Generate classic ships
-  const ships = [new Ship('carrier', 5),
+  const ships = [
+    new Ship('carrier', 5),
     new Ship('battleship', 4),
     new Ship('destroyer', 3),
     new Ship('submarine', 3),
-    new Ship('patrol boat', 2)]
+    new Ship('patrol boat', 2)
+  ]
 
   // Generate the 10x10 board
   const board = document.querySelector('.board')
@@ -45,6 +47,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   })
 
+  // Ship placement logic
   cells.forEach(cell => {
     const x = cell.x
     const y = cell.y
@@ -52,8 +55,6 @@ window.addEventListener('DOMContentLoaded', () => {
     // Add ship preview
     cell.addEventListener('mouseover', function() {
       const ship = ships[0]
-      console.log(shipInPlay)
-      console.log(shipInPlay.map(el => el.pos).flat())
       if (invalidPlacement(ship)) return
 
       for (let j = 0; j < ship.size; j++) {
@@ -86,7 +87,7 @@ window.addEventListener('DOMContentLoaded', () => {
       shipInPlay.push(ships.shift())
       if (!ships.length) phase = 'play'
     })
-    
+
     // Functions
     function invalidPlacement(ship) {
       const shipPositions = shipInPlay.map(ship => ship.pos).flat()
@@ -98,7 +99,7 @@ window.addEventListener('DOMContentLoaded', () => {
       // If the tile is occupied
       for (let j = 0; j < ship.size; j++) {
         const index = getIndex(x, y, j)
-        if (shipPositions.indexOf(index) !== -1) return true
+        if (shipPositions.includes(index)) return true
       }
     }
     function getIndex(x, y, modif = 0,) {
@@ -109,6 +110,59 @@ window.addEventListener('DOMContentLoaded', () => {
       return index
     }
   })
+
+  // AI ship placement logic
+  const enemyShipInPlay = [
+    new Ship('carrier', 5, [0, 1, 2, 3, 4]),
+    new Ship('battleship', 4, [10, 11, 12, 13]),
+    new Ship('destroyer', 3, [20, 21, 22]),
+    new Ship('submarine', 3, [30, 31, 32]),
+    new Ship('patrol boat', 2, [40, 41])
+  ]
+
+  // Attack logic
+  const targetBoard = document.querySelector('.target-board')
+  const targets = []
+  const attempts = []
+
+  for (let i = 0; i < boardWidth ** 2; i++) {
+    const tile = document.createElement('div')
+    tile.index = i
+    tile.x = i % boardWidth
+    tile.y = Math.floor(i / boardWidth)
+    targets.push(tile)
+    targetBoard.appendChild(tile)
+  }
+
+  targets.forEach(tile => tile.addEventListener('click', function() {
+    if (attempts.includes(this.index)) return
+    if (phase !== 'play') return
+    console.log(this.index)
+    checkHit(this.index)
+  }))
+
+  // Functions
+  function checkHit(index) {
+    attempts.push(index)
+    const ship = enemyShipInPlay.find(ship => ship.pos.includes(index))
+    if (ship) {
+      ship.damage++
+      targets[index].classList.add('hit')
+      if (!ship.afloat()) {
+        ship.pos.forEach(pos => targets[pos].textContent = 'X')
+      }
+      if (allSunk()) {
+        console.log('game ends')
+        phase = 'finished'
+      }
+    } else {
+      targets[index].classList.add('miss')
+    }
+  }
+
+  function allSunk() {
+    return enemyShipInPlay.every(ship => !ship.afloat())
+  }
 })
 
 HTMLElement.prototype.abc = function() {
