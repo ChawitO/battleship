@@ -1,3 +1,29 @@
-body {
+* {
+  box-sizing: border-box;
+}
+
+div.board {
+  display: grid;
+  width: 400px;
+  grid-template-columns: repeat(10, 40px);
+  grid-template-rows: repeat(10, 40px);
   background-color: dodgerBlue;
+
+  div {
+    border: 1px solid black;
+  }
+}
+
+div.placement {
+  > div:hover {
+    // background-color: yellow;
+  }
+}
+
+div.ghost {
+  background-color: steelBlue;
+}
+
+div.ship {
+  background-color: brown;
 }

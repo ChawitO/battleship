@@ -1,1 +1,1 @@
-body{background-color:#1e90ff}/*# sourceMappingURL=main.css.map */
+*{box-sizing:border-box}div.board{display:grid;width:400px;grid-template-columns:repeat(10, 40px);grid-template-rows:repeat(10, 40px);background-color:#1e90ff}div.board div{border:1px solid #000}div.ghost{background-color:#4682b4}div.ship{background-color:brown}/*# sourceMappingURL=main.css.map */
