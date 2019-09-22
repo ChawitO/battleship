@@ -7,7 +7,7 @@ div.board {
   width: 400px;
   grid-template-columns: repeat(10, 40px);
   grid-template-rows: repeat(10, 40px);
-  background-color: dodgerBlue;
+  background-color: #58A2C7;
 
   div {
     border: 1px solid black;
@@ -15,11 +15,11 @@ div.board {
 }
 
 div.ghost {
-  background-color: steelBlue;
+  background-color: #427D9A;
 }
 
 div.ship {
-  background-color: brown;
+  background-color: #4065AA;
 }
 
 div.target-board {
@@ -27,17 +27,17 @@ div.target-board {
   width: 400px;
   grid-template-columns: repeat(10, 40px);
   grid-template-rows: repeat(10, 40px);
-  background-color: grey;
+  background-color: rgba(#000000, 0.3);
 
   div {
-    border: 1px solid black;
+    border: 1px solid #242424;
   }
 }
 
 div.hit {
-  background-color: #F93C00;
+  background-color: #FF5D2A;
 }
 
 div.miss {
-  background-color: #FAFF00;
+  background-color: #FCFF54;
 }
