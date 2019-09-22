@@ -147,15 +147,31 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }, 1000)
 
+  let prevPos
   function enemyAttack() {
-    let index = Math.floor(Math.random() * boardWidth ** 2)
+    // If previous attempt is a hit: choose one of the 4 adjecent tile
+    let index
+    const directions = [-boardWidth, 1, boardWidth, -1]
+    if (prevPos) {
+      do {
+        index = prevPos + directions.shift()
+      } while (directions.length && enemyAttempts.includes(index))
+    } else {
+      index = Math.floor(Math.random() * boardWidth ** 2)
+    }
     while (enemyAttempts.includes(index)) {
       index = Math.floor(Math.random() * boardWidth ** 2)
     }
+    // If previous 2 attempts are hits, choose the next tile in line
+
+
     enemyAttempts.push(index)
+    console.log(index)
     const cell = friendlyOcean[index]
     cell.textContent = '*'
-    checkHit(index, shipInPlay, friendlyOcean)
+    const hit = checkHit(index, shipInPlay, friendlyOcean)
+    if (hit) prevPos = index
+    if (!directions.length) prevPos = false
   }
 
   function generateBoard(ocean, parent) {
