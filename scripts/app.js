@@ -1,23 +1,29 @@
 class Ship {
-  constructor(type, size, pos = []) {
+  constructor(type, size, icon) {
     this.type = type
     this.size = size
     this.damage = 0
-    this.pos = pos
+    this.pos = []
+    this.display = document.createElement('div')
+    this.icon = icon
   }
   afloat() {
     return this.damage < this.size
+  }
+  sunk() {
+    this.display.childNodes[1].classList.add('sunk')
   }
 }
 
 window.addEventListener('DOMContentLoaded', () => {
   // Variables declarations
-  const board = document.querySelector('.board')
+  const board = document.querySelector('.friendly-board')
+  const targetBoard = document.querySelector('.enemy-board')
   const boardWidth = 10
   const friendlyOcean = []
   const friendlyFleet = []
-  const targetBoard = document.querySelector('.target-board')
   const enemyOcean = []
+  const enemyFleet = []
   const attempts = []
   const enemyAttempts = []
   let vertical = false
@@ -25,29 +31,33 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Generate classic ships
   const ships = [
-    new Ship('carrier', 5),
-    new Ship('battleship', 4),
-    new Ship('destroyer', 3),
-    new Ship('submarine', 3),
-    new Ship('patrol boat', 2)
+    new Ship('carrier', 5, 'C'),
+    new Ship('battleship', 4, 'E'),
+    new Ship('destroyer', 3, 'M'),
+    new Ship('submarine', 3, '('),
+    new Ship('patrol boat', 2, 'W')
   ]
   const enemyShips = [
-    new Ship('carrier', 5),
-    new Ship('battleship', 4),
-    new Ship('destroyer', 3),
-    new Ship('submarine', 3),
-    new Ship('patrol boat', 2)
+    new Ship('carrier', 5, 'C'),
+    new Ship('battleship', 4, 'E'),
+    new Ship('destroyer', 3, 'M'),
+    new Ship('submarine', 3, '('),
+    new Ship('patrol boat', 2, 'W')
   ]
-  const enemyFleet = []
 
   // Generate the 10x10 boards
   generateBoard(friendlyOcean, board)
   generateBoard(enemyOcean, targetBoard)
 
+  const fFleet = document.querySelector('.friendly-fleet')
+  ships.forEach(ship => generateShipDisplay(ship, fFleet))
+
+  const eFleet = document.querySelector('.enemy-fleet')
+  enemyShips.forEach(ship => generateShipDisplay(ship, eFleet))
+
   // Rotate ship during placement
   document.addEventListener('keyup', (e) => {
     if (phase !== 'placement') return
-    console.log(e.keyCode)
     if (e.keyCode === 82) {
       vertical = !vertical
       friendlyOcean.forEach(cell => cell.classList.remove('ghost'))
@@ -92,7 +102,6 @@ window.addEventListener('DOMContentLoaded', () => {
   // AI ship placement logic
   while (enemyShips.length) {
     const ship = enemyShips.shift()
-    console.log(ship)
     // Randomise index and orientation
     let index = getRandomIndex()
     const vert = Math.random() >= 0.5
@@ -102,12 +111,10 @@ window.addEventListener('DOMContentLoaded', () => {
 
     placeShip(index, ship, enemyOcean, enemyFleet, vert)
   }
-  console.log(enemyFleet)
 
   function placeShip(index, ship, ocean, fleet, vert = vertical, user) {
     for (let j = 0; j < ship.size; j++) {
       const pos = getIndex(ocean[index].x, ocean[index].y, j, vert)
-      console.log(ocean[index].y)
       ship.pos.push(pos)
       if (user === 'player') {
         ocean[pos].classList.remove('ghost')
@@ -121,15 +128,9 @@ window.addEventListener('DOMContentLoaded', () => {
   enemyOcean.forEach(tile => tile.addEventListener('click', function() {
     if (phase !== 'play') return
     if (attempts.includes(this.index)) return
-    console.log(this.index)
 
     attempts.push(this.index)
-    const hit = checkHit(this.index, enemyFleet, enemyOcean)
-    if (hit) {
-      enemyOcean[this.index].classList.add('hit')
-    } else {
-      enemyOcean[this.index].classList.add('miss')
-    }
+    checkHit(this.index, enemyFleet, enemyOcean)
 
     // Do AI attack after the user's
     enemyAttack()
@@ -167,9 +168,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 
     enemyAttempts.push(index)
-    console.log(index)
-    const tile = friendlyOcean[index]
-    tile.textContent = '*'
     const hit = checkHit(index, friendlyFleet, friendlyOcean)
     if (hit) prevPos = index
     if (!directions.length) prevPos = false
@@ -186,16 +184,30 @@ window.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  function generateShipDisplay(ship, parent) {
+    const div = ship.display
+
+    const name = document.createElement('p')
+    name.textContent = ship.type
+    div.appendChild(name)
+
+    const icon = document.createElement('div')
+    icon.textContent = ship.icon
+    div.appendChild(icon)
+
+    div.classList.add('ship-display')
+    parent.appendChild(div)
+  }
+
   function invalidPlacement(pos, ship, fleet, vert = vertical) {
     const x = pos % boardWidth
     const y = Math.floor(pos / boardWidth)
     const shipPositions = fleet.map(ship => ship.pos).flat()
 
     if (!ship) return true
-    // Exceed x (boardWidth) when x > 9
     if (!vert && x + ship.size > boardWidth) return true
-    // Exceed y (boardWidth) when y > 9
     if (vert && y + ship.size > boardWidth) return true
+
     // If the tile is occupied
     for (let j = 0; j < ship.size; j++) {
       const index = getIndex(x, y, j, vert)
@@ -205,10 +217,15 @@ window.addEventListener('DOMContentLoaded', () => {
 
   function checkHit(pos, defenderShips, ocean) {
     const ship = defenderShips.find(ship => ship.pos.includes(pos))
-    if (!ship) return
+    if (!ship) {
+      ocean[pos].classList.add('miss')
+      return
+    }
     ship.damage++
+    ocean[pos].classList.add('hit')
     if (!ship.afloat()) {
-      ship.pos.forEach(pos => ocean[pos].textContent = 'X')
+      ship.pos.forEach(pos => ocean[pos].style.backgroundColor = 'black')
+      ship.sunk()
     }
     const finished = defenderShips.every(ship => !ship.afloat())
     if (finished) phase = 'finished'

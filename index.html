@@ -2,13 +2,27 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.1/normalize.min.css">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:500,700|Roboto+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles/main.css">
     <script src="scripts/app.js" charset="utf-8"></script>
     <title>Battleship GA-01</title>
   </head>
   <body>
     <h1>Battleship</h1>
-    <div class="board"></div>
-    <div class="target-board"></div>
+    <div>
+      <div class="board-wrapper">
+        <div>
+          <div class="friendly-fleet"></div>
+          <div class="board friendly-board"></div>
+        </div>
+        <div>
+          <div class="board enemy-board"></div>
+          <div class="enemy-fleet"></div>
+        </div>
+      </div>
+    </div>
+    <!-- <div>Icons made by <a href="https://www.flaticon.com/authors/vectors-market" title="Vectors Market">Vectors Market</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div> -->
+    <!-- <div>Icons made by <a href="https://www.flaticon.com/authors/linh-pham" title="Linh Pham">Linh Pham</a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com</a></div> -->
   </body>
 </html>

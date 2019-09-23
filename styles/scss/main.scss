@@ -2,42 +2,122 @@
   box-sizing: border-box;
 }
 
-div.board {
-  display: grid;
-  width: 400px;
-  grid-template-columns: repeat(10, 40px);
-  grid-template-rows: repeat(10, 40px);
-  background-color: #58A2C7;
+@font-face {
+  font-family: USNavy;
+  font-size: normal;
+  font-weight: 400;
+  src: url("fonts/usnavy.ttf");
+}
 
-  div {
-    border: 1px solid black;
+@font-face {
+  font-family: USNavyM;
+  font-size: normal;
+  font-weight: 400;
+  src: url("fonts/usnavym.ttf");
+}
+
+body {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  font-family: 'Montserrat', sans-serif;
+}
+
+h1 {
+  flex-basis: 100%;
+  text-align: center;
+}
+
+div.board-wrapper {
+  display: flex;
+
+  > div {
+    display: flex;
   }
 }
 
-div.ghost {
-  background-color: #427D9A;
+.friendly-fleet div {
+  p {
+    text-align: right;
+  }
+
+  div {
+    font-family: USNavy;
+    font-size: 30px;
+    text-align: right;
+  }
 }
 
-div.ship {
-  background-color: #4065AA;
+.enemy-fleet div div {
+  font-family: USNavyM;
+  font-size: 30px;
+  text-align: left;
 }
 
-div.target-board {
+.ship-display {
+  background-color: #EDEDED;
+  height: 82px;
+  padding: 0 10px;
+  margin-bottom: 2px;
+  border: 1px solid #242424;
+  border-radius: 2px;
+  user-select: none;
+
+  p {
+    font-family: 'Roboto Mono', monospace;
+    text-transform: capitalize;
+    margin-top: 10px;
+    margin-bottom: 0;
+  }
+
+  .sunk {
+    color: #E44D1E;
+  }
+}
+
+div.board {
   display: grid;
-  width: 400px;
   grid-template-columns: repeat(10, 40px);
   grid-template-rows: repeat(10, 40px);
-  background-color: rgba(#000000, 0.3);
+  grid-gap: 2px;
 
   div {
     border: 1px solid #242424;
+    background-color: #58A2C7;
+    border-radius: 2px;
+  }
+
+  div.ghost {
+    background-color: #427D9A;
+  }
+
+  div.ship {
+    background-color: #4065AA;
+  }
+
+  div.hit {
+    background-image: url('../resources/flame.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 75%;
+  }
+
+  div.miss {
+    background-image: url('../resources/circle.svg');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 25%;
   }
 }
 
-div.hit {
-  background-color: #FF5D2A;
+div.friendly-board {
+  margin: 0 20px;
 }
 
-div.miss {
-  background-color: #FCFF54;
+div.enemy-board {
+  margin-right: 20px;
+
+  div {
+    background-color: #AAAAAA;
+  }
 }
