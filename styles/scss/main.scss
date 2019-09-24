@@ -9,13 +9,6 @@
   src: url("fonts/usnavy.ttf");
 }
 
-@font-face {
-  font-family: USNavyM;
-  font-size: normal;
-  font-weight: 400;
-  src: url("fonts/usnavym.ttf");
-}
-
 body {
   display: flex;
   flex-wrap: wrap;
@@ -36,22 +29,12 @@ div.board-wrapper {
   }
 }
 
-.friendly-fleet div {
-  p {
-    text-align: right;
-  }
-
-  div {
-    font-family: USNavy;
-    font-size: 30px;
-    text-align: right;
-  }
+.friendly-fleet div p {
+  text-align: right;
 }
 
 .enemy-fleet div div {
-  font-family: USNavyM;
-  font-size: 30px;
-  text-align: left;
+  transform: rotateY(180deg);
 }
 
 .ship-display {
@@ -68,6 +51,16 @@ div.board-wrapper {
     text-transform: capitalize;
     margin-top: 10px;
     margin-bottom: 0;
+  }
+
+  div {
+    font-family: USNavy;
+    font-size: 30px;
+    text-align: right;
+  }
+
+  .ready {
+    color: #4C774F;
   }
 
   .sunk {

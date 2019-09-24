@@ -11,6 +11,7 @@ class Ship {
     return this.damage < this.size
   }
   sunk() {
+    this.pos.forEach(pos => this.ocean[pos].style.backgroundColor = 'black')
     this.display.childNodes[1].classList.add('sunk')
   }
 }
@@ -26,11 +27,12 @@ window.addEventListener('DOMContentLoaded', () => {
   const enemyFleet = []
   const attempts = []
   const enemyAttempts = []
+  let selectedShip
   let vertical = false
   let phase = 'placement'
 
   // Generate classic ships
-  const ships = [
+  let ships = [
     new Ship('carrier', 5, 'C'),
     new Ship('battleship', 4, 'E'),
     new Ship('destroyer', 3, 'M'),
@@ -60,41 +62,55 @@ window.addEventListener('DOMContentLoaded', () => {
     if (phase !== 'placement') return
     if (e.keyCode === 82) {
       vertical = !vertical
-      friendlyOcean.forEach(cell => cell.classList.remove('ghost'))
+      friendlyOcean.forEach(tile => tile.classList.remove('ghost'))
+
+      const tile = document.querySelector('.friendly-board div:hover')
+      const ship = selectedShip || ships[0]
+
+      if (!tile || invalidPlacement(tile.index, ship, friendlyFleet)) return
+      for (let j = 0; j < ship.size; j++) {
+        friendlyOcean[getIndex(tile.x, tile.y, j)].classList.add('ghost')
+      }
     }
   })
 
+  // Ship selection
+  ships.forEach(ship => ship.display.addEventListener('click', function() {
+    if (friendlyFleet.includes(ship)) return
+    selectedShip = ship
+  }))
+
   // Ship placement logic
-  friendlyOcean.forEach(cell => {
-    const x = cell.x
-    const y = cell.y
+  friendlyOcean.forEach(tile => {
 
     // Add ship preview
-    cell.addEventListener('mouseover', function() {
-      const ship = ships[0]
+    tile.addEventListener('mouseover', function() {
+      const ship = selectedShip || ships[0]
       if (invalidPlacement(this.index, ship, friendlyFleet)) return
 
       for (let j = 0; j < ship.size; j++) {
-        friendlyOcean[getIndex(x, y, j)].classList.add('ghost')
+        friendlyOcean[getIndex(this.x, this.y, j)].classList.add('ghost')
       }
     })
 
     // Remove ship preview
-    cell.addEventListener('mouseout', function() {
-      const ship = ships[0]
+    tile.addEventListener('mouseout', function() {
+      const ship = selectedShip || ships[0]
       if (invalidPlacement(this.index, ship, friendlyFleet)) return
 
       for (let j = 0; j < ship.size; j++) {
-        friendlyOcean[getIndex(x, y, j)].classList.remove('ghost')
+        friendlyOcean[getIndex(this.x, this.y, j)].classList.remove('ghost')
       }
     })
 
     // Placing down ship
-    cell.addEventListener('click', function() {
-      const ship = ships[0]
+    tile.addEventListener('click', function() {
+      const ship = selectedShip || ships[0]
       if (invalidPlacement(this.index, ship, friendlyFleet)) return
 
-      placeShip(this.index, ships.shift(), friendlyOcean, friendlyFleet, vertical, 'player')
+      ships = ships.filter(s => s !== ship)
+      selectedShip = null
+      placeShip(this.index, ship, friendlyOcean, friendlyFleet, vertical, 'player')
       if (!ships.length) phase = 'play'
     })
   })
@@ -115,10 +131,12 @@ window.addEventListener('DOMContentLoaded', () => {
   function placeShip(index, ship, ocean, fleet, vert = vertical, user) {
     for (let j = 0; j < ship.size; j++) {
       const pos = getIndex(ocean[index].x, ocean[index].y, j, vert)
+      ship.ocean = ocean
       ship.pos.push(pos)
       if (user === 'player') {
         ocean[pos].classList.remove('ghost')
         ocean[pos].classList.add('ship')
+        ship.display.childNodes[1].classList.add('ready')
       }
     }
     fleet.push(ship)
@@ -223,10 +241,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
     ship.damage++
     ocean[pos].classList.add('hit')
-    if (!ship.afloat()) {
-      ship.pos.forEach(pos => ocean[pos].style.backgroundColor = 'black')
-      ship.sunk()
-    }
+    if (!ship.afloat()) ship.sunk()
     const finished = defenderShips.every(ship => !ship.afloat())
     if (finished) phase = 'finished'
     return ship
