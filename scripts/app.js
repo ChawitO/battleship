@@ -1,26 +1,98 @@
+const boardWidth = 10
+let vertical = false
+let phase = 'placement'
+
 class Ship {
   constructor(type, size, icon) {
     this.type = type
     this.size = size
     this.damage = 0
+    this.fleet = undefined
+    this.ocean = undefined
     this.pos = []
     this.display = document.createElement('div')
     this.icon = icon
   }
+
   afloat() {
     return this.damage < this.size
   }
+
+  takeDamage() {
+    this.damage++
+    if (!this.afloat()) this.sunk()
+  }
+
   sunk() {
     this.pos.forEach(pos => this.ocean[pos].style.backgroundColor = 'black')
     this.display.childNodes[1].classList.add('sunk')
+    if (this.fleet.every(ship => !ship.afloat())) phase = 'finished'
   }
 }
 
+class BoardTile extends HTMLDivElement {
+  constructor(i, ocean) {
+    super()
+    this.index = i
+    this.x = i % boardWidth
+    this.y = Math.floor(i / boardWidth)
+    this.ship = undefined
+    this.ocean = ocean
+
+    ocean.push(this)
+  }
+
+  placeShip(ship, fleet, visible) {
+    for (let j = 0; j < ship.size; j++) {
+      const tile = this.getOffsetTile(j)
+      ship.fleet = fleet
+      ship.ocean = this.ocean
+      ship.pos.push(tile.index)
+      tile.ship = ship
+      if (visible) {
+        tile.classList.remove('ghost')
+        tile.classList.add('ship')
+        ship.display.childNodes[1].classList.add('ready')
+      }
+    }
+    fleet.push(ship)
+  }
+
+  invalidPlacement(ship, fleet) {
+    const { x, y } = this
+    const shipPositions = fleet.map(ship => ship.pos).flat()
+
+    if (!ship) return true
+    if (!vertical && x + ship.size > boardWidth) return true
+    if (vertical && y + ship.size > boardWidth) return true
+
+    // If the tile is occupied
+    for (let j = 0; j < ship.size; j++) {
+      const index = this.getOffsetTile(j).index
+      if (shipPositions.includes(index)) return true
+    }
+  }
+
+  getOffsetTile(offset) {
+    let { x, y } = this
+    vertical ? y += offset : x += offset
+    return this.ocean[(y * 10) + x]
+  }
+
+  checkHit() {
+    if (!this.ship) return this.classList.add('miss')
+    this.ship.takeDamage()
+    this.classList.add('hit')
+    return this.ship
+  }
+}
+customElements.define('board-tile', BoardTile, { extends: 'div' })
+
 window.addEventListener('DOMContentLoaded', () => {
+
   // Variables declarations
   const board = document.querySelector('.friendly-board')
   const targetBoard = document.querySelector('.enemy-board')
-  const boardWidth = 10
   const friendlyOcean = []
   const friendlyFleet = []
   const enemyOcean = []
@@ -28,8 +100,6 @@ window.addEventListener('DOMContentLoaded', () => {
   const attempts = []
   const enemyAttempts = []
   let selectedShip
-  let vertical = false
-  let phase = 'placement'
 
   // Generate classic ships
   let ships = [
@@ -59,18 +129,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Rotate ship during placement
   document.addEventListener('keyup', (e) => {
-    if (phase !== 'placement') return
-    if (e.keyCode === 82) {
+    const tile = document.querySelector('.friendly-board div:hover')
+    if (tile && e.keyCode === 82) {
+      removeGhost(tile)
       vertical = !vertical
-      friendlyOcean.forEach(tile => tile.classList.remove('ghost'))
-
-      const tile = document.querySelector('.friendly-board div:hover')
-      const ship = selectedShip || ships[0]
-
-      if (!tile || invalidPlacement(tile.index, ship, friendlyFleet)) return
-      for (let j = 0; j < ship.size; j++) {
-        friendlyOcean[getIndex(tile.x, tile.y, j)].classList.add('ghost')
-      }
+      addGhost(tile)
     }
   })
 
@@ -84,33 +147,19 @@ window.addEventListener('DOMContentLoaded', () => {
   friendlyOcean.forEach(tile => {
 
     // Add ship preview
-    tile.addEventListener('mouseover', function() {
-      const ship = selectedShip || ships[0]
-      if (invalidPlacement(this.index, ship, friendlyFleet)) return
-
-      for (let j = 0; j < ship.size; j++) {
-        friendlyOcean[getIndex(this.x, this.y, j)].classList.add('ghost')
-      }
-    })
+    tile.addEventListener('mouseover', addGhost)
 
     // Remove ship preview
-    tile.addEventListener('mouseout', function() {
-      const ship = selectedShip || ships[0]
-      if (invalidPlacement(this.index, ship, friendlyFleet)) return
-
-      for (let j = 0; j < ship.size; j++) {
-        friendlyOcean[getIndex(this.x, this.y, j)].classList.remove('ghost')
-      }
-    })
+    tile.addEventListener('mouseout', removeGhost)
 
     // Placing down ship
     tile.addEventListener('click', function() {
       const ship = selectedShip || ships[0]
-      if (invalidPlacement(this.index, ship, friendlyFleet)) return
+      if (this.invalidPlacement(ship, friendlyFleet)) return
 
       ships = ships.filter(s => s !== ship)
       selectedShip = null
-      placeShip(this.index, ship, friendlyOcean, friendlyFleet, vertical, 'player')
+      this.placeShip(ship, friendlyFleet, true)
       if (!ships.length) phase = 'play'
     })
   })
@@ -118,28 +167,15 @@ window.addEventListener('DOMContentLoaded', () => {
   // AI ship placement logic
   while (enemyShips.length) {
     const ship = enemyShips.shift()
-    // Randomise index and orientation
-    let index = getRandomIndex()
-    const vert = Math.random() >= 0.5
-    while (invalidPlacement(index, ship, enemyFleet, vert)) {
-      index = getRandomIndex()
-    }
 
-    placeShip(index, ship, enemyOcean, enemyFleet, vert)
-  }
+    vertical = Math.random() >= 0.5
+    let tile = enemyOcean[getRandomIndex()]
+    do {
+      tile = enemyOcean[getRandomIndex()]
+    } while (tile.invalidPlacement(ship, enemyFleet))
 
-  function placeShip(index, ship, ocean, fleet, vert = vertical, user) {
-    for (let j = 0; j < ship.size; j++) {
-      const pos = getIndex(ocean[index].x, ocean[index].y, j, vert)
-      ship.ocean = ocean
-      ship.pos.push(pos)
-      if (user === 'player') {
-        ocean[pos].classList.remove('ghost')
-        ocean[pos].classList.add('ship')
-        ship.display.childNodes[1].classList.add('ready')
-      }
-    }
-    fleet.push(ship)
+    tile.placeShip(ship, enemyFleet)
+    vertical = false
   }
 
   // Attack logic
@@ -148,14 +184,13 @@ window.addEventListener('DOMContentLoaded', () => {
     if (attempts.includes(this.index)) return
 
     attempts.push(this.index)
-    checkHit(this.index, enemyFleet, enemyOcean)
+    this.checkHit()
 
     // Do AI attack after the user's
     enemyAttack()
   }))
 
   // AI attack logic
-  // Math.random() for now
   // const attackIntervalId = setInterval(() => {
   //   switch (phase) {
   //     case 'play':
@@ -171,16 +206,15 @@ window.addEventListener('DOMContentLoaded', () => {
   function enemyAttack() {
 
     // Pick a random tile to attack
-    let index = Math.floor(Math.random() * boardWidth ** 2)
+    let index = getRandomIndex()
     const prev1 = hitRecords[hitRecords.length - 1]
     const prev2 = hitRecords[0]
 
-    // If previous attempt is a hit: record it, and pick random adjacent tile
+    // If previous attempt is a hit pick random adjacent tile
     if (hitRecords.length === 1) {
-      const candidates = validAdjacentTiles(prev1).filter(i => !enemyAttempts.includes(i))
-      const pick = Math.floor(Math.random() * candidates.length)
-      index = candidates[pick]
-      console.log('Tracking:', index, candidates)
+      const adjacents = neighbourTiles(prev1).filter(i => !enemyAttempts.includes(i))
+      const pick = Math.floor(Math.random() * adjacents.length)
+      index = adjacents[pick]
     }
 
     // If 2 hits are adjacent, pick tile in the line
@@ -192,37 +226,53 @@ window.addEventListener('DOMContentLoaded', () => {
       if (diff < 0 && diff > -boardWidth) diff = -1
       if (diff > 0 && diff < boardWidth) diff = 1
 
+      // Try tile next to the last hit
       index = prev1 + diff
-      if (enemyAttempts.includes(index) || !validAdjacentTiles(prev1).includes(index)) index = prev2 - diff
 
-      // If both ends of consecutive hits are misses
-      // Then there is at least 2 ships there
-      if (enemyAttempts.includes(index)) {
-        console.log(hitRecords)
-        index = validAdjacentTiles(hitRecords[0]).filter(pos => !enemyAttempts.includes(pos))[0]
+      // If it was attempted, try tile next to the previous hit
+      if (enemyAttempts.includes(index) || !neighbourTiles(prev1).includes(index)) index = prev2 - diff
+
+      // If both ends of consecutive hits are misses, then there is at least 2 ships there
+      if (enemyAttempts.includes(index) || (!neighbourTiles(prev2).includes(index) && !neighbourTiles(prev1).includes(index))) {
+        index = neighbourTiles(hitRecords[0]).filter(pos => !enemyAttempts.includes(pos))[0]
       }
-      console.log('Tracing:', index)
     }
 
+    // If the index has been attempted, get random index
     while (enemyAttempts.includes(index) || (!hitRecords.length && unmarkedAdjacentCount(index) < 1)) {
-      index = Math.floor(Math.random() * boardWidth ** 2)
+      index = getRandomIndex()
     }
 
-    console.log('AI attacking:', index)
     enemyAttempts.push(index)
-    const ship = checkHit(index, friendlyFleet, friendlyOcean)
+    const tile = friendlyOcean[index]
+    const ship = tile.checkHit()
     if (ship) hitRecords.push(index)
     if (ship && !ship.afloat()) hitRecords = hitRecords.filter(index => !ship.pos.includes(index))
-    if (hitRecords.length > 2 && !ship) hitRecords.sort((a, b) => a - b)
+  }
+
+  function addGhost(tile) {
+    if (tile.target) tile = tile.target
+    const ship = selectedShip || ships[0]
+    if (tile.invalidPlacement(ship, friendlyFleet)) return
+
+    for (let j = 0; j < ship.size; j++) {
+      tile.getOffsetTile(j).classList.add('ghost')
+    }
+  }
+
+  function removeGhost(tile) {
+    if (tile.target) tile = tile.target
+    const ship = selectedShip || ships[0]
+    if (tile.invalidPlacement(ship, friendlyFleet)) return
+
+    for (let j = 0; j < ship.size; j++) {
+      tile.getOffsetTile(j).classList.remove('ghost')
+    }
   }
 
   function generateBoard(ocean, parent) {
     for (let i = 0; i < boardWidth ** 2; i++) {
-      const tile = document.createElement('div')
-      tile.index = i
-      tile.x = i % boardWidth
-      tile.y = Math.floor(i / boardWidth)
-      ocean.push(tile)
+      const tile = new BoardTile(i, ocean)
       parent.appendChild(tile)
     }
   }
@@ -242,51 +292,15 @@ window.addEventListener('DOMContentLoaded', () => {
     parent.appendChild(div)
   }
 
-  function invalidPlacement(pos, ship, fleet, vert = vertical) {
-    const x = pos % boardWidth
-    const y = Math.floor(pos / boardWidth)
-    const shipPositions = fleet.map(ship => ship.pos).flat()
-
-    if (!ship) return true
-    if (!vert && x + ship.size > boardWidth) return true
-    if (vert && y + ship.size > boardWidth) return true
-
-    // If the tile is occupied
-    for (let j = 0; j < ship.size; j++) {
-      const index = getIndex(x, y, j, vert)
-      if (shipPositions.includes(index)) return true
-    }
-  }
-
-  function checkHit(pos, defenderShips, ocean) {
-    const ship = defenderShips.find(ship => ship.pos.includes(pos))
-    if (!ship) return ocean[pos].classList.add('miss')
-    ship.damage++
-    ocean[pos].classList.add('hit')
-    if (!ship.afloat()) ship.sunk()
-    const finished = defenderShips.every(ship => !ship.afloat())
-    if (finished) phase = 'finished'
-    return ship
-  }
-
   function getRandomIndex() {
     return Math.floor(Math.random() * boardWidth ** 2)
-  }
-
-  function getIndex(x, y, modif = 0, vert = vertical) {
-    vert ? y += modif : x += modif
-    return (y * 10) + x
   }
 
   function getX(index) {
     return index % boardWidth
   }
 
-  function getY(index) {
-    return Math.floor(index / boardWidth)
-  }
-
-  function validAdjacentTiles(index) {
+  function neighbourTiles(index) {
     return Object.values({
       n: (index - boardWidth) >= 0 ? index - boardWidth : null,
       s: (index + boardWidth) < boardWidth ** 2 ? index + boardWidth : null,
@@ -296,15 +310,6 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function unmarkedAdjacentCount(index) {
-    return validAdjacentTiles(index).filter(i => !enemyAttempts.includes(i)).length
+    return neighbourTiles(index).filter(i => !enemyAttempts.includes(i)).length
   }
-
-  function isAdjacent(index1, index2) {
-    return getX(index1) === getX(index2) || getY(index1) === getY(index2)
-  }
-
 })
-
-HTMLElement.prototype.abc = function() {
-  console.log('Im adding new prototype!')
-}
