@@ -167,16 +167,16 @@ window.addEventListener('DOMContentLoaded', () => {
   //   }
   // }, 1000)
 
-  let tracking = []
+  let hitRecords = []
   function enemyAttack() {
 
     // Pick a random tile to attack
     let index = Math.floor(Math.random() * boardWidth ** 2)
-    const prev1 = tracking[tracking.length - 1]
-    const prev2 = tracking[0]
+    const prev1 = hitRecords[hitRecords.length - 1]
+    const prev2 = hitRecords[0]
 
     // If previous attempt is a hit: record it, and pick random adjacent tile
-    if (tracking.length === 1) {
+    if (hitRecords.length === 1) {
       const candidates = validAdjacentTiles(prev1).filter(i => !enemyAttempts.includes(i))
       const pick = Math.floor(Math.random() * candidates.length)
       index = candidates[pick]
@@ -184,7 +184,7 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     // If 2 hits are adjacent, pick tile in the line
-    if (tracking.length >= 2) {
+    if (hitRecords.length >= 2) {
       let diff = prev1 - prev2
 
       diff = Math.max(diff, -boardWidth)
@@ -195,19 +195,25 @@ window.addEventListener('DOMContentLoaded', () => {
       index = prev1 + diff
       if (enemyAttempts.includes(index) || !validAdjacentTiles(prev1).includes(index)) index = prev2 - diff
 
+      // If both ends of consecutive hits are misses
+      // Then there is at least 2 ships there
+      if (enemyAttempts.includes(index)) {
+        console.log(hitRecords)
+        index = validAdjacentTiles(hitRecords[0]).filter(pos => !enemyAttempts.includes(pos))[0]
+      }
       console.log('Tracing:', index)
     }
 
-    while (enemyAttempts.includes(index) || (!tracking.length && unmarkedAdjacentCount(index) < 1)) {
+    while (enemyAttempts.includes(index) || (!hitRecords.length && unmarkedAdjacentCount(index) < 1)) {
       index = Math.floor(Math.random() * boardWidth ** 2)
     }
 
     console.log('AI attacking:', index)
     enemyAttempts.push(index)
     const ship = checkHit(index, friendlyFleet, friendlyOcean)
-    if (ship) tracking.push(index)
-    if (ship && !ship.afloat()) tracking = tracking.filter(index => !ship.pos.includes(index))
-    if (tracking.length > 2 && !ship) tracking.sort((a, b) => a - b)
+    if (ship) hitRecords.push(index)
+    if (ship && !ship.afloat()) hitRecords = hitRecords.filter(index => !ship.pos.includes(index))
+    if (hitRecords.length > 2 && !ship) hitRecords.sort((a, b) => a - b)
   }
 
   function generateBoard(ocean, parent) {
