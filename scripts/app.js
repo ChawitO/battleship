@@ -167,28 +167,47 @@ window.addEventListener('DOMContentLoaded', () => {
   //   }
   // }, 1000)
 
-  let prevPos
+  let tracking = []
   function enemyAttack() {
-    // If previous attempt is a hit: choose one of the 4 adjecent tile
-    let index
-    const directions = [-boardWidth, 1, boardWidth, -1]
-    if (prevPos) {
-      do {
-        index = prevPos + directions.shift()
-      } while (directions.length && enemyAttempts.includes(index))
-    } else {
+
+    // Pick a random tile to attack
+    let index = Math.floor(Math.random() * boardWidth ** 2)
+    const prev1 = tracking[tracking.length - 1]
+    const prev2 = tracking[0]
+
+    // If previous attempt is a hit: record it, and pick random adjacent tile
+    if (tracking.length === 1) {
+      const candidates = validAdjacentTiles(prev1).filter(i => !enemyAttempts.includes(i))
+      const pick = Math.floor(Math.random() * candidates.length)
+      index = candidates[pick]
+      console.log('Tracking:', index, candidates)
+    }
+
+    // If 2 hits are adjacent, pick tile in the line
+    if (tracking.length >= 2) {
+      let diff = prev1 - prev2
+
+      diff = Math.max(diff, -boardWidth)
+      diff = Math.min(diff, boardWidth)
+      if (diff < 0 && diff > -boardWidth) diff = -1
+      if (diff > 0 && diff < boardWidth) diff = 1
+
+      index = prev1 + diff
+      if (enemyAttempts.includes(index) || !validAdjacentTiles(prev1).includes(index)) index = prev2 - diff
+
+      console.log('Tracing:', index)
+    }
+
+    while (enemyAttempts.includes(index) || (!tracking.length && unmarkedAdjacentCount(index) < 1)) {
       index = Math.floor(Math.random() * boardWidth ** 2)
     }
-    while (enemyAttempts.includes(index)) {
-      index = Math.floor(Math.random() * boardWidth ** 2)
-    }
-    // If previous 2 attempts are hits, choose the next tile in line
 
-
+    console.log('AI attacking:', index)
     enemyAttempts.push(index)
-    const hit = checkHit(index, friendlyFleet, friendlyOcean)
-    if (hit) prevPos = index
-    if (!directions.length) prevPos = false
+    const ship = checkHit(index, friendlyFleet, friendlyOcean)
+    if (ship) tracking.push(index)
+    if (ship && !ship.afloat()) tracking = tracking.filter(index => !ship.pos.includes(index))
+    if (tracking.length > 2 && !ship) tracking.sort((a, b) => a - b)
   }
 
   function generateBoard(ocean, parent) {
@@ -235,10 +254,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
   function checkHit(pos, defenderShips, ocean) {
     const ship = defenderShips.find(ship => ship.pos.includes(pos))
-    if (!ship) {
-      ocean[pos].classList.add('miss')
-      return
-    }
+    if (!ship) return ocean[pos].classList.add('miss')
     ship.damage++
     ocean[pos].classList.add('hit')
     if (!ship.afloat()) ship.sunk()
@@ -254,6 +270,31 @@ window.addEventListener('DOMContentLoaded', () => {
   function getIndex(x, y, modif = 0, vert = vertical) {
     vert ? y += modif : x += modif
     return (y * 10) + x
+  }
+
+  function getX(index) {
+    return index % boardWidth
+  }
+
+  function getY(index) {
+    return Math.floor(index / boardWidth)
+  }
+
+  function validAdjacentTiles(index) {
+    return Object.values({
+      n: (index - boardWidth) >= 0 ? index - boardWidth : null,
+      s: (index + boardWidth) < boardWidth ** 2 ? index + boardWidth : null,
+      e: getX(index) < boardWidth - 1 ? index + 1 : null,
+      w: getX(index) > 0 ? index - 1 : null
+    }).filter(v => v !== null)
+  }
+
+  function unmarkedAdjacentCount(index) {
+    return validAdjacentTiles(index).filter(i => !enemyAttempts.includes(i)).length
+  }
+
+  function isAdjacent(index1, index2) {
+    return getX(index1) === getX(index2) || getY(index1) === getY(index2)
   }
 
 })
