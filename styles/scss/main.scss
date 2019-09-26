@@ -85,7 +85,7 @@ div.board {
   grid-template-rows: repeat(10, 40px);
   grid-gap: 2px;
 
-  div {
+  > div {
     border: 1px solid #242424;
     background-color: #58A2C7;
     border-radius: 2px;
@@ -121,11 +121,14 @@ div.friendly-board {
 div.enemy-board {
   margin-right: 20px;
 
-  div {
+  > div {
     background-color: #AAAAAA;
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
-  div.enemy-hover {
+  > div.enemy-hover {
     background-color: #939393;
   }
 }
@@ -140,4 +143,25 @@ div.enemy-board {
   font-size: 32px;
   background-color: rgba(#FFFFFF, 0.8);
   border-radius: 10px;
+}
+
+div.missile, div.enemy-missile {
+  background-image: url('../resources/rocket.svg');
+  background-repeat: no-repeat;
+  background-position: center;
+  width: 60px;
+  height: 60px;
+  animation-timing-function: ease-in;
+  animation-duration: 0.6s;
+  animation-name: slideInLeft;
+}
+
+div.enemy-missile {
+  animation-name: slideInRight;
+}
+
+div.explosion {
+  background-image: url('../resources/explosion.svg');
+  width: 40px;
+  height: 40px;
 }

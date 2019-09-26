@@ -28,7 +28,6 @@ class Ship {
 
   takeDamage() {
     this.damage++
-    if (!this.afloat()) this.sunk()
   }
 
   sunk() {
@@ -39,10 +38,10 @@ class Ship {
       const endNotice = document.querySelector('.end-notice')
       const enemyDamage = enemyFleet.reduce((sum, ship) => sum + ship.damage, 0)
       const friendlyDamage = friendlyFleet.reduce((sum, ship) => sum + ship.damage, 0)
-      const winner = enemyDamage > friendlyDamage ? 'You' : 'AI'
+      const winner = enemyDamage > friendlyDamage ? 'You win' : 'AI wins'
       const count = enemyDamage > friendlyDamage ? attempts.length : enemyAttempts.length
 
-      endNotice.textContent = `${winner} wins after ${count} attempts`
+      endNotice.textContent = `${winner} after ${count} attempts`
       endNotice.classList.add('fadeInDown')
     }
   }
@@ -97,10 +96,27 @@ class BoardTile extends HTMLDivElement {
     return this.ocean[(y * 10) + x]
   }
 
-  checkHit() {
-    if (!this.ship) return this.classList.add('miss')
-    this.ship.takeDamage()
-    this.classList.add('hit')
+  checkHit(player) {
+    if (this.ship) this.ship.takeDamage()
+
+    const missile = document.createElement('div')
+    missile.classList.add(player ? 'missile' : 'enemy-missile')
+    this.appendChild(missile)
+
+    setTimeout(() => {
+      this.removeChild(missile)
+      if (!this.ship) return this.classList.add('miss')
+
+      const explo = document.createElement('div')
+      explo.classList.add('explosion')
+      this.appendChild(explo)
+
+      setTimeout(() => {
+        this.removeChild(explo)
+        this.classList.add('hit')
+        if (!this.ship.afloat()) this.ship.sunk()
+      }, 500)
+    }, 600)
     return this.ship
   }
 }
@@ -219,8 +235,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (attempts.includes(this.index)) return
 
     attempts.push(this.index)
-    this.checkHit()
-
+    this.checkHit(true)
     // Do AI attack after the user's
     enemyAttack()
   }))
@@ -286,6 +301,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function addGhost(tile) {
+    if (phase !== 'placement') return
     if (tile.target) tile = tile.target
     const ship = selectedShip || ships[0]
     if (tile.invalidPlacement(ship, friendlyFleet)) return
@@ -296,6 +312,7 @@ window.addEventListener('DOMContentLoaded', () => {
   }
 
   function removeGhost(tile) {
+    if (phase !== 'placement') return
     if (tile.target) tile = tile.target
     const ship = selectedShip || ships[0]
     if (tile.invalidPlacement(ship, friendlyFleet)) return
