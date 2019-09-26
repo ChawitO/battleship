@@ -96,11 +96,11 @@ class BoardTile extends HTMLDivElement {
     return this.ocean[(y * 10) + x]
   }
 
-  checkHit(player) {
+  checkHit() {
     if (this.ship) this.ship.takeDamage()
 
     const missile = document.createElement('div')
-    missile.classList.add(player ? 'missile' : 'enemy-missile')
+    missile.classList.add('missile')
     this.appendChild(missile)
 
     setTimeout(() => {
@@ -141,37 +141,21 @@ window.addEventListener('DOMContentLoaded', () => {
   ]
 
   // Generate the 10x10 boards
-  const friendlyBoard = document.querySelector('.friendly-board')
-  const enemyBoard = document.querySelector('.enemy-board')
+  const friendlyBoard = document.querySelector('.player .board')
+  const enemyBoard = document.querySelector('.enemy .board')
   generateBoard(friendlyOcean, friendlyBoard)
   generateBoard(enemyOcean, enemyBoard)
 
-  friendlyBoard.childNodes.forEach(tile => tile.addEventListener('mouseover', function() {
-    this.classList.add('ghost')
-  }))
-
-  friendlyBoard.childNodes.forEach(tile => tile.addEventListener('mouseout', function() {
-    this.classList.remove('ghost')
-  }))
-
-  enemyBoard.childNodes.forEach(tile => tile.addEventListener('mouseover', function() {
-    this.classList.add('enemy-hover')
-  }))
-
-  enemyBoard.childNodes.forEach(tile => tile.addEventListener('mouseout', function() {
-    this.classList.remove('enemy-hover')
-  }))
-
-  const fFleet = document.querySelector('.friendly-fleet')
+  const fFleet = document.querySelector('.player .fleet')
   ships.forEach(ship => generateShipDisplay(ship, fFleet))
   ships[0].display.classList.add('selected')
 
-  const eFleet = document.querySelector('.enemy-fleet')
+  const eFleet = document.querySelector('.enemy .fleet')
   enemyShips.forEach(ship => generateShipDisplay(ship, eFleet))
 
   // Rotate ship during placement
   document.addEventListener('keyup', (e) => {
-    const tile = document.querySelector('.friendly-board div:hover')
+    const tile = document.querySelector('.player .board div:hover')
     if (tile && e.keyCode === 82) {
       removeGhost(tile)
       vertical = !vertical
@@ -183,7 +167,7 @@ window.addEventListener('DOMContentLoaded', () => {
   ships.forEach(ship => ship.display.addEventListener('click', function() {
     if (friendlyFleet.includes(ship)) return
     selectedShip = ship
-    document.querySelector('.friendly-fleet').childNodes.forEach(div => div.classList.remove('selected'))
+    document.querySelector('.player .fleet').childNodes.forEach(div => div.classList.remove('selected'))
     this.classList.add('selected')
   }))
 
@@ -221,9 +205,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
     vertical = Math.random() >= 0.5
     let tile = enemyOcean[getRandomIndex()]
-    do {
+    while (tile.invalidPlacement(ship, enemyFleet)) {
       tile = enemyOcean[getRandomIndex()]
-    } while (tile.invalidPlacement(ship, enemyFleet))
+    }
 
     tile.placeShip(ship, enemyFleet)
     vertical = false
@@ -235,7 +219,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (attempts.includes(this.index)) return
 
     attempts.push(this.index)
-    this.checkHit(true)
+    this.checkHit()
     // Do AI attack after the user's
     enemyAttack()
   }))
@@ -340,7 +324,6 @@ window.addEventListener('DOMContentLoaded', () => {
     icon.textContent = ship.icon
     div.appendChild(icon)
 
-    div.classList.add('ship-display')
     parent.appendChild(div)
   }
 

@@ -28,30 +28,46 @@ h1 {
   text-align: center;
 }
 
-div.board-wrapper {
+h3 {
+  margin-top: 0;
+  flex-basis: 100%;
+  text-align: center;
+}
+
+.start-notice, .end-notice {
+  position: absolute;
+  top: 175px;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  font-size: 32px;
+  padding: 10px;
+  border-radius: 10px;
+  background-color: rgba(#FFFFFF, 0.8);
+}
+
+section.board-wrapper {
   display: flex;
 
-  > div {
+  .player, .enemy {
     display: flex;
+    flex-wrap: wrap;
+    width: 600px;
   }
 }
 
-.friendly-fleet div p {
-  text-align: right;
-}
-
-.enemy-fleet div div {
-  transform: rotateY(180deg);
-}
-
-.ship-display {
-  background-color: #EDEDED;
+.fleet > div {
   height: 82px;
   padding: 0 10px;
   margin-bottom: 2px;
   border: 1px solid #242424;
   border-radius: 2px;
+  background-color: #EDEDED;
   user-select: none;
+
+  &.selected {
+    background-color: #7CABE3;
+  }
 
   p {
     font-family: 'Roboto Mono', monospace;
@@ -75,10 +91,6 @@ div.board-wrapper {
   }
 }
 
-.ship-display.selected {
-  background-color: #7CABE3;
-}
-
 div.board {
   display: grid;
   grid-template-columns: repeat(10, 40px);
@@ -86,9 +98,16 @@ div.board {
   grid-gap: 2px;
 
   > div {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     border: 1px solid #242424;
-    background-color: #58A2C7;
     border-radius: 2px;
+    background-color: #58A2C7;
+
+    &:hover {
+      background-color: #427D9A;
+    }
   }
 
   div.ghost {
@@ -114,54 +133,61 @@ div.board {
   }
 }
 
-div.friendly-board {
-  margin: 0 20px;
-}
-
-div.enemy-board {
-  margin-right: 20px;
-
-  > div {
-    background-color: #AAAAAA;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
-
-  > div.enemy-hover {
-    background-color: #939393;
-  }
-}
-
-.start-notice, .end-notice {
-  position: absolute;
-  top: 175px;
-  display: none;
-  justify-content: center;
-  align-items: center;
-  padding: 10px;
-  font-size: 32px;
-  background-color: rgba(#FFFFFF, 0.8);
-  border-radius: 10px;
-}
-
-div.missile, div.enemy-missile {
+div.missile {
   background-image: url('../resources/rocket.svg');
   background-repeat: no-repeat;
   background-position: center;
   width: 60px;
   height: 60px;
-  animation-timing-function: ease-in;
-  animation-duration: 0.6s;
-  animation-name: slideInLeft;
-}
-
-div.enemy-missile {
-  animation-name: slideInRight;
+  animation: slideInLeft 0.6s ease-in;
 }
 
 div.explosion {
   background-image: url('../resources/explosion.svg');
   width: 40px;
   height: 40px;
+}
+
+div.player {
+  h3 {
+    margin-left: 135px;
+  }
+
+  .fleet div p {
+    text-align: right;
+  }
+
+  .board {
+    margin: 0 20px;
+  }
+
+  .missile {
+    animation-name: slideInRight;
+  }
+}
+
+div.enemy {
+  h3 {
+    margin-right: 182px;
+  }
+
+  .fleet {
+    order: 1;
+
+    div div {
+      transform: rotateY(180deg);
+    }
+  }
+
+  .board {
+    margin-right: 20px;
+
+    > div {
+      background-color: #AAAAAA;
+
+      &:hover {
+      background-color: #939393;
+      }
+    }
+  }
 }
