@@ -1,0 +1,45 @@
+@keyframes fadeInDownUp {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
+
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+div.fadeInDownUp {
+  display: flex;
+  animation-duration: 2s;
+  animation-name: fadeInDownUp;
+}
+
+div.fadeInDown {
+  display: flex;
+  animation-duration: 2s;
+  animation-name: fadeInDown;
+}

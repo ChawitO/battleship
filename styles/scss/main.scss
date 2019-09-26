@@ -1,3 +1,5 @@
+@import 'animations';
+
 * {
   box-sizing: border-box;
 }
@@ -14,6 +16,11 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   font-family: 'Montserrat', sans-serif;
+
+  > div {
+    display: flex;
+    justify-content: center;
+  }
 }
 
 h1 {
@@ -68,6 +75,10 @@ div.board-wrapper {
   }
 }
 
+.ship-display.selected {
+  background-color: #7CABE3;
+}
+
 div.board {
   display: grid;
   grid-template-columns: repeat(10, 40px);
@@ -113,4 +124,20 @@ div.enemy-board {
   div {
     background-color: #AAAAAA;
   }
+
+  div.enemy-hover {
+    background-color: #939393;
+  }
+}
+
+.start-notice, .end-notice {
+  position: absolute;
+  top: 175px;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  font-size: 32px;
+  background-color: rgba(#FFFFFF, 0.8);
+  border-radius: 10px;
 }

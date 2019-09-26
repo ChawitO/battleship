@@ -1,4 +1,12 @@
+// Variables declarations
+const friendlyOcean = []
+const friendlyFleet = []
+const enemyOcean = []
+const enemyFleet = []
+const attempts = []
+const enemyAttempts = []
 const boardWidth = 10
+let selectedShip
 let vertical = false
 let phase = 'placement'
 
@@ -26,7 +34,17 @@ class Ship {
   sunk() {
     this.pos.forEach(pos => this.ocean[pos].style.backgroundColor = 'black')
     this.display.childNodes[1].classList.add('sunk')
-    if (this.fleet.every(ship => !ship.afloat())) phase = 'finished'
+    if (this.fleet.every(ship => !ship.afloat())) {
+      phase = 'finished'
+      const endNotice = document.querySelector('.end-notice')
+      const enemyDamage = enemyFleet.reduce((sum, ship) => sum + ship.damage, 0)
+      const friendlyDamage = friendlyFleet.reduce((sum, ship) => sum + ship.damage, 0)
+      const winner = enemyDamage > friendlyDamage ? 'You' : 'AI'
+      const count = enemyDamage > friendlyDamage ? attempts.length : enemyAttempts.length
+
+      endNotice.textContent = `${winner} wins after ${count} attempts`
+      endNotice.classList.add('fadeInDown')
+    }
   }
 }
 
@@ -90,17 +108,6 @@ customElements.define('board-tile', BoardTile, { extends: 'div' })
 
 window.addEventListener('DOMContentLoaded', () => {
 
-  // Variables declarations
-  const board = document.querySelector('.friendly-board')
-  const targetBoard = document.querySelector('.enemy-board')
-  const friendlyOcean = []
-  const friendlyFleet = []
-  const enemyOcean = []
-  const enemyFleet = []
-  const attempts = []
-  const enemyAttempts = []
-  let selectedShip
-
   // Generate classic ships
   let ships = [
     new Ship('carrier', 5, 'C'),
@@ -118,11 +125,30 @@ window.addEventListener('DOMContentLoaded', () => {
   ]
 
   // Generate the 10x10 boards
-  generateBoard(friendlyOcean, board)
-  generateBoard(enemyOcean, targetBoard)
+  const friendlyBoard = document.querySelector('.friendly-board')
+  const enemyBoard = document.querySelector('.enemy-board')
+  generateBoard(friendlyOcean, friendlyBoard)
+  generateBoard(enemyOcean, enemyBoard)
+
+  friendlyBoard.childNodes.forEach(tile => tile.addEventListener('mouseover', function() {
+    this.classList.add('ghost')
+  }))
+
+  friendlyBoard.childNodes.forEach(tile => tile.addEventListener('mouseout', function() {
+    this.classList.remove('ghost')
+  }))
+
+  enemyBoard.childNodes.forEach(tile => tile.addEventListener('mouseover', function() {
+    this.classList.add('enemy-hover')
+  }))
+
+  enemyBoard.childNodes.forEach(tile => tile.addEventListener('mouseout', function() {
+    this.classList.remove('enemy-hover')
+  }))
 
   const fFleet = document.querySelector('.friendly-fleet')
   ships.forEach(ship => generateShipDisplay(ship, fFleet))
+  ships[0].display.classList.add('selected')
 
   const eFleet = document.querySelector('.enemy-fleet')
   enemyShips.forEach(ship => generateShipDisplay(ship, eFleet))
@@ -141,6 +167,8 @@ window.addEventListener('DOMContentLoaded', () => {
   ships.forEach(ship => ship.display.addEventListener('click', function() {
     if (friendlyFleet.includes(ship)) return
     selectedShip = ship
+    document.querySelector('.friendly-fleet').childNodes.forEach(div => div.classList.remove('selected'))
+    this.classList.add('selected')
   }))
 
   // Ship placement logic
@@ -160,7 +188,14 @@ window.addEventListener('DOMContentLoaded', () => {
       ships = ships.filter(s => s !== ship)
       selectedShip = null
       this.placeShip(ship, friendlyFleet, true)
-      if (!ships.length) phase = 'play'
+      ship.display.classList.remove('selected')
+      if (ships[0]) ships[0].display.classList.add('selected')
+      if (!ships.length) {
+        phase = 'play'
+        const startNotice = document.querySelector('.start-notice')
+        startNotice.classList.add('fadeInDownUp')
+        startNotice.addEventListener('animationend', (e) => e.target.classList.remove('fadeInDownUp'))
+      }
     })
   })
 
