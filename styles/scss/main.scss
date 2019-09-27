@@ -1,6 +1,9 @@
 @import 'animations';
 
 $dark-grey: #2E2E2E;
+$ship-blue: #4065AA;
+$ghost-blue: #4E92B4;
+$tile-blue: #66B5DB;
 
 * {
   box-sizing: border-box;
@@ -45,9 +48,11 @@ h3 {
   justify-content: center;
   align-items: center;
   font-size: 32px;
-  padding: 10px;
-  border-radius: 10px;
-  background-color: rgba(#FFFFFF, 0.8);
+  padding: 36px;
+  background-color: rgba(#000000, 0.8);
+  color: #FFF;
+  width: 100%;
+  z-index: 1;
 }
 
 section.board-wrapper {
@@ -67,11 +72,11 @@ section.board-wrapper {
   margin-bottom: 2px;
   border: 1px solid $dark-grey;
   border-radius: 2px;
-  background-color: #EDEDED;
+  background-color: #F0F0F0;
   user-select: none;
 
   &.selected {
-    background-color: #7CABE3;
+    background-color: $tile-blue;
   }
 
   p {
@@ -89,11 +94,11 @@ section.board-wrapper {
   }
 
   .ready {
-    color: #4C774F;
+    color: $ship-blue;
   }
 
   .sunk {
-    color: #E44D1E;
+    color: #F3705A;
   }
 }
 
@@ -109,19 +114,19 @@ div.board {
     align-items: center;
     border: 1px solid $dark-grey;
     border-radius: 2px;
-    background-color: #58A2C7;
+    background-color: $tile-blue;
 
     &:hover {
-      background-color: #427D9A;
+      background-color: $ghost-blue;
     }
   }
 
   div.ghost {
-    background-color: #427D9A;
+    background-color: $ghost-blue;
   }
 
   div.ship {
-    background-color: #4065AA;
+    background-color: $ship-blue;
   }
 
   div.hit {
@@ -182,10 +187,10 @@ div.enemy {
   }
 
   .board > div {
-    background-color: #AAAAAA;
+    background-color: #BBBBBB;
 
     &:hover {
-    background-color: #939393;
+    background-color: #AAAAAA;
     }
   }
 }
