@@ -23,7 +23,7 @@ body {
   > div {
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    align-items: center;
   }
 }
 
@@ -200,6 +200,7 @@ button {
 }
 
 .instruction {
+  padding: 10px;
   margin: 10px 10px;
   border-radius: 5px;
 
