@@ -125,8 +125,27 @@ customElements.define('board-tile', BoardTile, { extends: 'div' })
 window.addEventListener('DOMContentLoaded', () => {
 
   // Event for instruction button
-  document.querySelector('button').addEventListener('click', () => {
+  document.querySelector('#btn-inst').addEventListener('click', () => {
     document.querySelector('.instruction').classList.toggle('show')
+  })
+
+  // Event for restart button
+  const restartBtn = document.querySelector('#btn-restart')
+  restartBtn.addEventListener('click', function() {
+    location.reload()
+  })
+
+  // Event for start button
+  const startBtn = document.querySelector('#btn-start')
+  startBtn.addEventListener('click', function() {
+    if (!ships.length) {
+      phase = 'play'
+      const startNotice = document.querySelector('.start-notice')
+      startNotice.classList.add('fadeInDownUp')
+      startNotice.addEventListener('animationend', (e) => e.target.classList.remove('fadeInDownUp'))
+      this.classList.add('hide')
+      restartBtn.classList.remove('hide', 'noVisibility')
+    }
   })
 
   // Generate classic ships
@@ -180,8 +199,8 @@ window.addEventListener('DOMContentLoaded', () => {
       })
       ship.display.childNodes[1].classList.remove('ready')
       ship.pos = []
+      friendlyFleet = friendlyFleet.filter(fShip => fShip !== ship)
     }
-    friendlyFleet = friendlyFleet.filter(fShip => fShip !== ship)
     document.querySelector('.player .fleet').childNodes.forEach(div => div.classList.remove('selected'))
     this.classList.add('selected')
   }))
@@ -206,10 +225,8 @@ window.addEventListener('DOMContentLoaded', () => {
       ship.display.classList.remove('selected')
       if (ships[0]) ships[0].display.classList.add('selected')
       if (!ships.length) {
-        phase = 'play'
-        const startNotice = document.querySelector('.start-notice')
-        startNotice.classList.add('fadeInDownUp')
-        startNotice.addEventListener('animationend', (e) => e.target.classList.remove('fadeInDownUp'))
+        startBtn.classList.remove('hide')
+        restartBtn.classList.add('hide')
       }
     })
   })

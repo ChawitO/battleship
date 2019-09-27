@@ -190,18 +190,42 @@ div.enemy {
   }
 }
 
-// Instructions
-button {
+// Instructions and buttons
+.btn-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0 10px;
   margin-top: 20px;
+}
+
+button {
   padding: 10px;
   border: 1px solid $dark-grey;
   border-radius: 5px;
   cursor: pointer;
+  width: 136.6px;
+  height: 40px;
+
+}
+
+#btn-inst {
+  order: 1;
+}
+
+.hide {
+  display: none;
+}
+
+.noVisibility {
+  visibility: hidden;
 }
 
 .instruction {
+  width: 858px;
   padding: 10px;
-  margin: 10px 0;
+  margin-bottom: 10px;
   border-radius: 5px;
 
   overflow: hidden;
