@@ -1,5 +1,7 @@
 @import 'animations';
 
+$dark-grey: #2E2E2E;
+
 * {
   box-sizing: border-box;
 }
@@ -16,9 +18,11 @@ body {
   flex-wrap: wrap;
   justify-content: center;
   font-family: 'Montserrat', sans-serif;
+  color: $dark-grey;
 
   > div {
     display: flex;
+    flex-direction: column;
     justify-content: center;
   }
 }
@@ -52,6 +56,7 @@ section.board-wrapper {
   .player, .enemy {
     display: flex;
     flex-wrap: wrap;
+    justify-content: space-around;
     width: 600px;
   }
 }
@@ -60,7 +65,7 @@ section.board-wrapper {
   height: 82px;
   padding: 0 10px;
   margin-bottom: 2px;
-  border: 1px solid #242424;
+  border: 1px solid $dark-grey;
   border-radius: 2px;
   background-color: #EDEDED;
   user-select: none;
@@ -79,6 +84,7 @@ section.board-wrapper {
   div {
     font-family: USNavy;
     font-size: 30px;
+    color: #000;
     text-align: right;
   }
 
@@ -101,7 +107,7 @@ div.board {
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 1px solid #242424;
+    border: 1px solid $dark-grey;
     border-radius: 2px;
     background-color: #58A2C7;
 
@@ -150,15 +156,11 @@ div.explosion {
 
 div.player {
   h3 {
-    margin-left: 135px;
+    margin-left: 160px;
   }
 
   .fleet div p {
     text-align: right;
-  }
-
-  .board {
-    margin: 0 20px;
   }
 
   .missile {
@@ -168,7 +170,7 @@ div.player {
 
 div.enemy {
   h3 {
-    margin-right: 182px;
+    margin-right: 160px;
   }
 
   .fleet {
@@ -179,15 +181,42 @@ div.enemy {
     }
   }
 
-  .board {
-    margin-right: 20px;
+  .board > div {
+    background-color: #AAAAAA;
 
-    > div {
-      background-color: #AAAAAA;
-
-      &:hover {
-      background-color: #939393;
-      }
+    &:hover {
+    background-color: #939393;
     }
   }
+}
+
+// Instructions
+button {
+  margin: 20px 10px 0;
+  padding: 10px;
+  border: 1px solid $dark-grey;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.instruction {
+  margin: 10px 10px;
+  border-radius: 5px;
+
+  overflow: hidden;
+  transition: all .5s ease-in-out;
+  height: 0;
+  line-height: 0;
+  color: transparent;
+}
+
+.show {
+  height: 370px;
+  line-height: 1.5;
+  color: $dark-grey;
+  border: 1px solid $dark-grey;
+}
+
+li {
+  margin-top: 10px;
 }

@@ -124,6 +124,11 @@ customElements.define('board-tile', BoardTile, { extends: 'div' })
 
 window.addEventListener('DOMContentLoaded', () => {
 
+  // Event for instruction button
+  document.querySelector('button').addEventListener('click', () => {
+    document.querySelector('.instruction').classList.toggle('show')
+  })
+
   // Generate classic ships
   let ships = [
     new Ship('carrier', 5, 'C'),
