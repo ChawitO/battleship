@@ -192,7 +192,7 @@ div.enemy {
 
 // Instructions
 button {
-  margin: 20px 10px 0;
+  margin-top: 20px;
   padding: 10px;
   border: 1px solid $dark-grey;
   border-radius: 5px;
@@ -201,7 +201,7 @@ button {
 
 .instruction {
   padding: 10px;
-  margin: 10px 10px;
+  margin: 10px 0;
   border-radius: 5px;
 
   overflow: hidden;

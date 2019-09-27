@@ -1,6 +1,6 @@
 // Variables declarations
 const friendlyOcean = []
-const friendlyFleet = []
+let friendlyFleet = []
 const enemyOcean = []
 const enemyFleet = []
 const attempts = []
@@ -170,8 +170,18 @@ window.addEventListener('DOMContentLoaded', () => {
 
   // Ship selection
   ships.forEach(ship => ship.display.addEventListener('click', function() {
-    if (friendlyFleet.includes(ship)) return
+    if (phase !== 'placement') return
     selectedShip = ship
+    if (!ships.includes(ship)) {
+      ships.push(ship)
+      ship.pos.forEach(pos => {
+        ship.ocean[pos].ship = undefined
+        ship.ocean[pos].classList.remove('ship')
+      })
+      ship.display.childNodes[1].classList.remove('ready')
+      ship.pos = []
+    }
+    friendlyFleet = friendlyFleet.filter(fShip => fShip !== ship)
     document.querySelector('.player .fleet').childNodes.forEach(div => div.classList.remove('selected'))
     this.classList.add('selected')
   }))
