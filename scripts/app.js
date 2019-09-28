@@ -422,4 +422,53 @@ window.addEventListener('DOMContentLoaded', () => {
   function unmarkedAdjacentCount(index) {
     return neighbourTiles(index).filter(i => !enemyAttempts.includes(i)).length
   }
+
+  // testCycle(10000)
+  // function testCycle(cycleCount) {
+  //   const sum = Array(101).fill(0)
+  //   while (cycleCount) {
+  //     // Reset stages
+  //     ships = [
+  //       new Ship('carrier', 5, 'C'),
+  //       new Ship('battleship', 4, 'E'),
+  //       new Ship('destroyer', 3, 'M'),
+  //       new Ship('submarine', 3, '('),
+  //       new Ship('patrol boat', 2, 'W')
+  //     ]
+  //     playerOcean = []
+  //     playerFleet = []
+  //     enemyAttempts = []
+  //
+  //     // Randomly generate player's board
+  //     for (let i = 0; i < 100; i++) {
+  //       new BoardTile(i, playerOcean)
+  //     }
+  //
+  //     while (ships.length) {
+  //       const ship = ships.shift()
+  //
+  //       vertical = Math.random() >= 0.5
+  //       let tile = playerOcean[getRandomIndex()]
+  //       const obstacles = playerFleet.map(ship => ship.pos).flat()
+  //       while (tile.invalidPlacement(ship, obstacles)) {
+  //         tile = playerOcean[getRandomIndex()]
+  //       }
+  //
+  //       tile.placeShip(ship, playerFleet)
+  //       vertical = false
+  //     }
+  //
+  //     // Run the attack
+  //     while (playerFleet.some(ship => ship.afloat())) {
+  //       // huntTrackingAlgorithm()
+  //       probabilityDensityAlgorithm()
+  //     }
+  //
+  //     // Increment
+  //     console.log('test running...')
+  //     sum[enemyAttempts.length]++
+  //     cycleCount--
+  //   }
+  //   console.log(sum)
+  // }
 })
