@@ -35,7 +35,7 @@ class Ship {
     this.pos.forEach(pos => this.ocean[pos].classList.add('jsSunk'))
     setTimeout(() =>{
       this.pos.forEach(pos => this.ocean[pos].classList.add('sunk'))
-      // this.display.childNodes[1].classList.add('sunk')
+      this.display.childNodes[1].classList.add('sunk')
       if (this.fleet.every(ship => !ship.afloat())) {
         phase = 'finished'
         const endNotice = document.querySelector('.end-notice')
