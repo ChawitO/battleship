@@ -1,6 +1,6 @@
 // Variables declarations
-const friendlyOcean = []
-let friendlyFleet = []
+const playerOcean = []
+let playerFleet = []
 const enemyOcean = []
 const enemyFleet = []
 const attempts = []
@@ -28,22 +28,26 @@ class Ship {
 
   takeDamage() {
     this.damage++
+    if (!this.afloat()) this.sunk()
   }
 
   sunk() {
-    this.pos.forEach(pos => this.ocean[pos].classList.add('sunk'))
-    this.display.childNodes[1].classList.add('sunk')
-    if (this.fleet.every(ship => !ship.afloat())) {
-      phase = 'finished'
-      const endNotice = document.querySelector('.end-notice')
-      const enemyDamage = enemyFleet.reduce((sum, ship) => sum + ship.damage, 0)
-      const friendlyDamage = friendlyFleet.reduce((sum, ship) => sum + ship.damage, 0)
-      const winner = enemyDamage > friendlyDamage ? 'You win' : 'AI wins'
-      const count = enemyDamage > friendlyDamage ? attempts.length : enemyAttempts.length
+    this.pos.forEach(pos => this.ocean[pos].classList.add('jsSunk'))
+    setTimeout(() =>{
+      this.pos.forEach(pos => this.ocean[pos].classList.add('sunk'))
+      // this.display.childNodes[1].classList.add('sunk')
+      if (this.fleet.every(ship => !ship.afloat())) {
+        phase = 'finished'
+        const endNotice = document.querySelector('.end-notice')
+        const enemyDamage = enemyFleet.reduce((sum, ship) => sum + ship.damage, 0)
+        const friendlyDamage = playerFleet.reduce((sum, ship) => sum + ship.damage, 0)
+        const winner = enemyDamage > friendlyDamage ? 'You win' : 'AI wins'
+        const count = enemyDamage > friendlyDamage ? attempts.length : enemyAttempts.length
 
-      endNotice.textContent = `${winner} after ${count} attempts`
-      endNotice.classList.add('fadeInDown')
-    }
+        endNotice.textContent = `${winner} after ${count} attempts`
+        endNotice.classList.add('fadeInDown')
+      }
+    }, 1100)
   }
 }
 
@@ -96,27 +100,32 @@ class BoardTile extends HTMLDivElement {
   }
 
   checkHit() {
-    if (this.ship) this.ship.takeDamage()
+    this.animateMissile()
+    if (!this.ship) {
+      this.classList.add('jsMiss')
+      return setTimeout(() => this.classList.add('miss'), 600)
+    }
+    this.ship.takeDamage()
+    this.classList.add('jsHit')
+    this.animateExplosion()
+    return this.ship
+  }
 
+  animateMissile() {
     const missile = document.createElement('div')
     missile.classList.add('missile')
     this.appendChild(missile)
+    setTimeout(() => this.removeChild(missile), 600)
+  }
 
+  animateExplosion() {
+    const explo = document.createElement('div')
+    explo.classList.add('explosion')
+    setTimeout(() => this.appendChild(explo), 600)
     setTimeout(() => {
-      this.removeChild(missile)
-      if (!this.ship) return this.classList.add('miss')
-
-      const explo = document.createElement('div')
-      explo.classList.add('explosion')
-      this.appendChild(explo)
-
-      setTimeout(() => {
-        this.removeChild(explo)
-        this.classList.add('hit')
-        if (!this.ship.afloat()) this.ship.sunk()
-      }, 500)
-    }, 600)
-    return this.ship
+      this.removeChild(explo)
+      this.classList.add('hit')
+    }, 1100)
   }
 }
 customElements.define('board-tile', BoardTile, { extends: 'div' })
@@ -166,11 +175,11 @@ window.addEventListener('DOMContentLoaded', () => {
   // Generate the 10x10 boards
   const friendlyBoard = document.querySelector('.player .board')
   const enemyBoard = document.querySelector('.enemy .board')
-  generateBoard(friendlyOcean, friendlyBoard)
+  generateBoard(playerOcean, friendlyBoard)
   generateBoard(enemyOcean, enemyBoard)
 
-  const fFleet = document.querySelector('.player .fleet')
-  ships.forEach(ship => generateShipDisplay(ship, fFleet))
+  const pFleet = document.querySelector('.player .fleet')
+  ships.forEach(ship => generateShipDisplay(ship, pFleet))
   ships[0].display.classList.add('selected')
 
   const eFleet = document.querySelector('.enemy .fleet')
@@ -198,14 +207,14 @@ window.addEventListener('DOMContentLoaded', () => {
       })
       ship.display.childNodes[1].classList.remove('ready')
       ship.pos = []
-      friendlyFleet = friendlyFleet.filter(fShip => fShip !== ship)
+      playerFleet = playerFleet.filter(fShip => fShip !== ship)
     }
     document.querySelector('.player .fleet').childNodes.forEach(div => div.classList.remove('selected'))
     this.classList.add('selected')
   }))
 
   // Ship placement logic
-  friendlyOcean.forEach(tile => {
+  playerOcean.forEach(tile => {
 
     // Add ship preview
     tile.addEventListener('mouseover', addGhost)
@@ -216,12 +225,12 @@ window.addEventListener('DOMContentLoaded', () => {
     // Placing down ship
     tile.addEventListener('click', function() {
       const ship = selectedShip || ships[0]
-      const obstacles = friendlyFleet.map(ship => ship.pos).flat()
+      const obstacles = playerFleet.map(ship => ship.pos).flat()
       if (this.invalidPlacement(ship, obstacles)) return
 
       ships = ships.filter(s => s !== ship)
       selectedShip = null
-      this.placeShip(ship, friendlyFleet, true)
+      this.placeShip(ship, playerFleet, true)
       ship.display.classList.remove('selected')
       if (ships[0]) ships[0].display.classList.add('selected')
       if (!ships.length) {
@@ -250,6 +259,7 @@ window.addEventListener('DOMContentLoaded', () => {
   enemyOcean.forEach(tile => tile.addEventListener('click', function() {
     if (phase !== 'play') return
     if (attempts.includes(this.index)) return
+    if (playerFleet.every(ship => !ship.afloat()) || enemyFleet.every(ship => !ship.afloat())) return
 
     attempts.push(this.index)
     this.checkHit()
@@ -258,23 +268,26 @@ window.addEventListener('DOMContentLoaded', () => {
   }))
 
   // AI attack logic
-  let hitRecords = []
   function huntTrackingAlgorithm() {
+
+    const activeHits = playerOcean.filter(tile => {
+      return tile.classList.contains('jsHit') && !tile.classList.contains('jsSunk')
+    }).map(tile => tile.index)
 
     // Pick a random tile to attack
     let index = getRandomIndex()
-    const prev1 = hitRecords[hitRecords.length - 1]
-    const prev2 = hitRecords[0]
+    const prev1 = activeHits[activeHits.length - 1]
+    const prev2 = activeHits[0]
 
     // If previous attempt is a hit pick random adjacent tile
-    if (hitRecords.length === 1) {
+    if (activeHits.length === 1) {
       const adjacents = neighbourTiles(prev1).filter(i => !enemyAttempts.includes(i))
       const pick = Math.floor(Math.random() * adjacents.length)
       index = adjacents[pick]
     }
 
     // If 2 hits are adjacent, pick tile in the line
-    if (hitRecords.length >= 2) {
+    if (activeHits.length >= 2) {
       let diff = prev1 - prev2
 
       diff = Math.max(diff, -boardWidth)
@@ -290,35 +303,33 @@ window.addEventListener('DOMContentLoaded', () => {
 
       // If both ends of consecutive hits are misses, then there is at least 2 ships there
       if (enemyAttempts.includes(index) || (!neighbourTiles(prev2).includes(index) && !neighbourTiles(prev1).includes(index))) {
-        index = neighbourTiles(hitRecords[0]).filter(pos => !enemyAttempts.includes(pos))[0]
+        index = neighbourTiles(activeHits[0]).filter(pos => !enemyAttempts.includes(pos))[0]
       }
     }
 
     // If the index has been attempted, get random index
-    while (enemyAttempts.includes(index) || (!hitRecords.length && unmarkedAdjacentCount(index) < 1)) {
+    while (index === undefined || enemyAttempts.includes(index) || (!activeHits.length && unmarkedAdjacentCount(index) < 1)) {
       index = getRandomIndex()
     }
 
     enemyAttempts.push(index)
-    const tile = friendlyOcean[index]
-    const ship = tile.checkHit()
-    if (ship) hitRecords.push(index)
-    if (ship && !ship.afloat()) hitRecords = hitRecords.filter(index => !ship.pos.includes(index))
+    playerOcean[index].checkHit()
   }
 
   function probabilityDensityAlgorithm() {
-    const remainingShips = friendlyFleet.filter(ship => ship.afloat())
+    const remainingShips = playerFleet.filter(ship => ship.afloat())
     const probabilities = Array(100).fill(0)
-    const obstacles = friendlyOcean.filter(tile => {
-      return tile.classList.contains('miss') || tile.classList.contains('sunk')
+    const obstacles = playerOcean.filter(tile => {
+      return tile.classList.contains('jsMiss') || tile.classList.contains('jsSunk')
     }).map(tile => tile.index)
 
-    const activeHits = friendlyOcean.filter(tile => {
-      return tile.classList.contains('hit') && !tile.classList.contains('sunk')
+    const activeHits = playerOcean.filter(tile => {
+      return tile.classList.contains('jsHit') && !tile.classList.contains('jsSunk')
     }).map(tile => tile.index)
 
+    // For each remaining ships, find all possible arrangements
     remainingShips.forEach(ship => {
-      friendlyOcean.forEach(tile => {
+      playerOcean.forEach(tile => {
         [true, false].forEach(state => {
           if (!tile.invalidPlacement(ship, obstacles, state)) {
             let hitOverlaps = 0
@@ -327,6 +338,7 @@ window.addEventListener('DOMContentLoaded', () => {
               probabilities[pos]++
               if (activeHits.includes(pos)) hitOverlaps++
             }
+            // If the placement overlaps active hits, give extra weight
             if (hitOverlaps) {
               for (let j = 0; j < ship.size; j++) {
                 const pos = tile.getOffsetTile(j, state).index
@@ -337,18 +349,19 @@ window.addEventListener('DOMContentLoaded', () => {
         })
       })
     })
-    enemyAttempts.forEach(i => probabilities[i] = 0)
+    // Prevent targeting previous tiles
+    activeHits.forEach(i => probabilities[i] = 0)
     const index = probabilities.indexOf(Math.max(...probabilities))
 
     enemyAttempts.push(index)
-    friendlyOcean[index].checkHit()
+    playerOcean[index].checkHit()
   }
 
   function addGhost(tile) {
     if (phase !== 'placement') return
     if (tile.target) tile = tile.target
     const ship = selectedShip || ships[0]
-    const obstacles = friendlyFleet.map(ship => ship.pos).flat()
+    const obstacles = playerFleet.map(ship => ship.pos).flat()
     if (tile.invalidPlacement(ship, obstacles)) return
 
     for (let j = 0; j < ship.size; j++) {
@@ -360,7 +373,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (phase !== 'placement') return
     if (tile.target) tile = tile.target
     const ship = selectedShip || ships[0]
-    const obstacles = friendlyFleet.map(ship => ship.pos).flat()
+    const obstacles = playerFleet.map(ship => ship.pos).flat()
     if (tile.invalidPlacement(ship, obstacles)) return
 
     for (let j = 0; j < ship.size; j++) {
