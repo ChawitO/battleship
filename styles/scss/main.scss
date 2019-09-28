@@ -142,6 +142,10 @@ div.board {
     background-position: center;
     background-size: 25%;
   }
+
+  div.sunk {
+    background-color: black;
+  }
 }
 
 div.missile {
@@ -191,6 +195,10 @@ div.enemy {
 
     &:hover {
     background-color: #AAAAAA;
+    }
+
+    &.sunk {
+      background-color: black;
     }
   }
 }

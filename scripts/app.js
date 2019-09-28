@@ -31,7 +31,7 @@ class Ship {
   }
 
   sunk() {
-    this.pos.forEach(pos => this.ocean[pos].style.backgroundColor = 'black')
+    this.pos.forEach(pos => this.ocean[pos].classList.add('sunk'))
     this.display.childNodes[1].classList.add('sunk')
     if (this.fleet.every(ship => !ship.afloat())) {
       phase = 'finished'
@@ -75,24 +75,23 @@ class BoardTile extends HTMLDivElement {
     fleet.push(ship)
   }
 
-  invalidPlacement(ship, fleet) {
+  invalidPlacement(ship, obstacles, vert = vertical) {
     const { x, y } = this
-    const shipPositions = fleet.map(ship => ship.pos).flat()
 
     if (!ship) return true
-    if (!vertical && x + ship.size > boardWidth) return true
-    if (vertical && y + ship.size > boardWidth) return true
+    if (!vert && x + ship.size > boardWidth) return true
+    if (vert && y + ship.size > boardWidth) return true
 
-    // If the tile is occupied
+    // Check against obstacles
     for (let j = 0; j < ship.size; j++) {
-      const index = this.getOffsetTile(j).index
-      if (shipPositions.includes(index)) return true
+      const index = this.getOffsetTile(j, vert).index
+      if (obstacles.includes(index)) return true
     }
   }
 
-  getOffsetTile(offset) {
+  getOffsetTile(offset, vert = vertical) {
     let { x, y } = this
-    vertical ? y += offset : x += offset
+    vert ? y += offset : x += offset
     return this.ocean[(y * 10) + x]
   }
 
@@ -217,7 +216,8 @@ window.addEventListener('DOMContentLoaded', () => {
     // Placing down ship
     tile.addEventListener('click', function() {
       const ship = selectedShip || ships[0]
-      if (this.invalidPlacement(ship, friendlyFleet)) return
+      const obstacles = friendlyFleet.map(ship => ship.pos).flat()
+      if (this.invalidPlacement(ship, obstacles)) return
 
       ships = ships.filter(s => s !== ship)
       selectedShip = null
@@ -237,7 +237,8 @@ window.addEventListener('DOMContentLoaded', () => {
 
     vertical = Math.random() >= 0.5
     let tile = enemyOcean[getRandomIndex()]
-    while (tile.invalidPlacement(ship, enemyFleet)) {
+    const obstacles = enemyFleet.map(ship => ship.pos).flat()
+    while (tile.invalidPlacement(ship, obstacles)) {
       tile = enemyOcean[getRandomIndex()]
     }
 
@@ -253,23 +254,12 @@ window.addEventListener('DOMContentLoaded', () => {
     attempts.push(this.index)
     this.checkHit()
     // Do AI attack after the user's
-    enemyAttack()
+    probabilityDensityAlgorithm()
   }))
 
   // AI attack logic
-  // const attackIntervalId = setInterval(() => {
-  //   switch (phase) {
-  //     case 'play':
-  //       enemyAttack()
-  //       break
-  //     case 'finished':
-  //       clearInterval(attackIntervalId)
-  //       break
-  //   }
-  // }, 1000)
-
   let hitRecords = []
-  function enemyAttack() {
+  function huntTrackingAlgorithm() {
 
     // Pick a random tile to attack
     let index = getRandomIndex()
@@ -316,11 +306,50 @@ window.addEventListener('DOMContentLoaded', () => {
     if (ship && !ship.afloat()) hitRecords = hitRecords.filter(index => !ship.pos.includes(index))
   }
 
+  function probabilityDensityAlgorithm() {
+    const remainingShips = friendlyFleet.filter(ship => ship.afloat())
+    const probabilities = Array(100).fill(0)
+    const obstacles = friendlyOcean.filter(tile => {
+      return tile.classList.contains('miss') || tile.classList.contains('sunk')
+    }).map(tile => tile.index)
+
+    const activeHits = friendlyOcean.filter(tile => {
+      return tile.classList.contains('hit') && !tile.classList.contains('sunk')
+    }).map(tile => tile.index)
+
+    remainingShips.forEach(ship => {
+      friendlyOcean.forEach(tile => {
+        [true, false].forEach(state => {
+          if (!tile.invalidPlacement(ship, obstacles, state)) {
+            let hitOverlaps = 0
+            for (let j = 0; j < ship.size; j++) {
+              const pos = tile.getOffsetTile(j, state).index
+              probabilities[pos]++
+              if (activeHits.includes(pos)) hitOverlaps++
+            }
+            if (hitOverlaps) {
+              for (let j = 0; j < ship.size; j++) {
+                const pos = tile.getOffsetTile(j, state).index
+                probabilities[pos] += 5 * hitOverlaps
+              }
+            }
+          }
+        })
+      })
+    })
+    enemyAttempts.forEach(i => probabilities[i] = 0)
+    const index = probabilities.indexOf(Math.max(...probabilities))
+
+    enemyAttempts.push(index)
+    friendlyOcean[index].checkHit()
+  }
+
   function addGhost(tile) {
     if (phase !== 'placement') return
     if (tile.target) tile = tile.target
     const ship = selectedShip || ships[0]
-    if (tile.invalidPlacement(ship, friendlyFleet)) return
+    const obstacles = friendlyFleet.map(ship => ship.pos).flat()
+    if (tile.invalidPlacement(ship, obstacles)) return
 
     for (let j = 0; j < ship.size; j++) {
       tile.getOffsetTile(j).classList.add('ghost')
@@ -331,7 +360,8 @@ window.addEventListener('DOMContentLoaded', () => {
     if (phase !== 'placement') return
     if (tile.target) tile = tile.target
     const ship = selectedShip || ships[0]
-    if (tile.invalidPlacement(ship, friendlyFleet)) return
+    const obstacles = friendlyFleet.map(ship => ship.pos).flat()
+    if (tile.invalidPlacement(ship, obstacles)) return
 
     for (let j = 0; j < ship.size; j++) {
       tile.getOffsetTile(j).classList.remove('ghost')
