@@ -1,8 +1,9 @@
 @import 'animations';
 
 $dark-grey: #2E2E2E;
-$ship-blue: #4065AA;
-$ghost-blue: #4E92B4;
+$light-grey: #E0E0E0;
+$ship-blue: #2C4A82;
+$ghost-blue: #40728B;
 $tile-blue: #66B5DB;
 
 * {
@@ -42,16 +43,16 @@ h3 {
 }
 
 .start-notice, .end-notice {
+  display: none;
   position: absolute;
   top: 175px;
-  display: none;
+  width: 100%;
   justify-content: center;
   align-items: center;
-  font-size: 32px;
   padding: 36px;
-  background-color: rgba(#000000, 0.8);
+  font-size: 32px;
   color: #FFF;
-  width: 100%;
+  background-color: rgba(#000000, 0.8);
   z-index: 1;
 }
 
@@ -68,11 +69,10 @@ section.board-wrapper {
 
 .fleet > div {
   height: 82px;
-  padding: 0 10px;
+  padding: 10px;
   margin-bottom: 2px;
-  border: 1px solid $dark-grey;
   border-radius: 2px;
-  background-color: #F0F0F0;
+  background-color: $light-grey;
   user-select: none;
 
   &.selected {
@@ -82,14 +82,13 @@ section.board-wrapper {
   p {
     font-family: 'Roboto Mono', monospace;
     text-transform: capitalize;
-    margin-top: 10px;
-    margin-bottom: 0;
+    margin: 0;
   }
 
   div {
     font-family: USNavy;
     font-size: 30px;
-    color: #000;
+    color: $dark-grey;
     text-align: right;
   }
 
@@ -112,7 +111,6 @@ div.board {
     display: flex;
     justify-content: center;
     align-items: center;
-    border: 1px solid $dark-grey;
     border-radius: 2px;
     background-color: $tile-blue;
 
@@ -144,7 +142,7 @@ div.board {
   }
 
   div.sunk {
-    background-color: black;
+    background-color: $dark-grey;
   }
 }
 
@@ -194,7 +192,7 @@ div.enemy {
     background-color: #BBBBBB;
 
     &:hover {
-    background-color: #AAAAAA;
+    background-color: #919191;
     }
 
     &.sunk {
@@ -214,12 +212,14 @@ div.enemy {
 }
 
 button {
-  padding: 10px;
-  border: 1px solid $dark-grey;
-  border-radius: 5px;
-  cursor: pointer;
   width: 136.6px;
   height: 40px;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  color: $dark-grey;
+  background-color: $light-grey;
+  cursor: pointer;
 
 }
 
@@ -252,7 +252,7 @@ button {
   height: 370px;
   line-height: 1.5;
   color: $dark-grey;
-  border: 1px solid $dark-grey;
+  background-color: $light-grey;
 }
 
 li {
