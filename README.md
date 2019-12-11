@@ -12,6 +12,8 @@ Deployed with GitHub Pages at https://chawito.github.io/battleship/
 
 The game was designed with flat design in mind, with clean visual and minimal clutters.
 
+The ship panels on the side show the player's ships (left panel), and enemy's ships (right panel). With blue colour for player, and black colour for the enemy. If a ship has been sunk, the panel icon will show the ship in orange colour.
+
 I decided to add missile animation coming from above to strike the tile when each player attacks as well, along with small explosion that shows up when a ship is hit.
 ![Imgur](https://i.imgur.com/05dF0r5.png)
 ![Imgur](https://i.imgur.com/faBlGu4.png)
